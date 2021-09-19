@@ -11,11 +11,11 @@ variables:
   - name: subscription_name
     value: 'Azure'
   - name: bicep_filepath
-    value: 'SimpleWithManagedIdentities/VanillaDeployment.bicep'
+    value: 'infra/Deployment.bicep'
   - name: arm_template_filepath
     value: '$(Pipeline.Workspace)/BicepArtifacts/services.json'
   - name: app_name
-    value: 'identitydemo-123654'
+    value: 'lockingdemo-123654'
 
 stages:
 - stage: Build
@@ -31,17 +31,17 @@ stages:
           scriptLocation: inlineScript
           inlineScript: |
             az --version
-            az bicep build --file SimpleWithManagedIdentities/VanillaDeployment.bicep
+            az bicep build --file infra/Deployment.bicep
 
       - task: AzureResourceManagerTemplateDeployment@3
         displayName: 'Deploy ARM Templates'
         inputs:
           azureResourceManagerConnection: 'Azure'
           subscriptionId: '92dba6c6-2cf8-46ad-9d75-8674f0f66b9a'
-          resourceGroupName: 'testing'
+          resourceGroupName: 'locking'
           location: 'Australia East'
-          csmFile: SimpleWithManagedIdentities/VanillaDeployment.json
-          csmParametersFile: SimpleWithManagedIdentities/VanillaDeploymentParameters.json
+          csmFile: infra/VanillaDeployment.json
+          csmParametersFile: infra/DeploymentParameters.json
           deploymentMode: Incremental
           
   - job: AzureFunction
@@ -52,7 +52,7 @@ stages:
         displayName: build
         inputs:
           command: 'build'
-          projects: AzureIdentityDemo/AzureIdentityDemo.sln
+          projects: src/NDC21CosmosRedisDemo.sln
           arguments: --output $(System.DefaultWorkingDirectory)/published_backend --configuration Release
 
       - task: ArchiveFiles@2
