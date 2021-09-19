@@ -12,8 +12,21 @@ var storageAccountName = 'stor54365'
 var contributorRoleId = 'b24988ac-6180-42a0-ab88-20f7382dd24c'
 
 var cosmosAccountName = toLower(applicationName)
+var redisName = toLower(applicationName)
 var websiteName = applicationName // why not just use the param directly?
 var hostingPlanName = applicationName // why not just use the param directly?
+
+resource redis 'Microsoft.Cache/redis@2020-12-01' = {
+  name: redisName
+  location: location
+  properties:{
+    sku: {
+      capacity: 0
+      family: 'C'
+      name: 'Basic'
+    }
+  }
+}
 
 resource cosmos 'Microsoft.DocumentDB/databaseAccounts@2020-04-01' = {
   name: cosmosAccountName
