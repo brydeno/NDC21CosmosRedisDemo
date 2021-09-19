@@ -16,7 +16,7 @@ var redisName = toLower(applicationName)
 var websiteName = applicationName // why not just use the param directly?
 var hostingPlanName = applicationName // why not just use the param directly?
 
-resource redis 'Microsoft.Cache/redis@2020-12-01' = {
+resource redis 'Microsoft.Cache/Redis@2020-12-01' = {
   name: redisName
   location: location
   properties:{
