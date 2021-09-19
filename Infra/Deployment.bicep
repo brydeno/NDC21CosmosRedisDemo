@@ -6,7 +6,7 @@ param location string = resourceGroup().location
 param databaseName string = 'LockingDemo'
 param containerName string = 'Items'
 
-var storageAccountName = 'stor54365'
+var storageAccountName = 'stor54364'
 
 // All the various AD role id's we'll be using
 var contributorRoleId = 'b24988ac-6180-42a0-ab88-20f7382dd24c'
