@@ -1,0 +1,75 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  name: Mine
+#  vmImage: 'windows-latest'
+
+variables:
+  - name: subscription_name
+    value: 'Azure'
+  - name: bicep_filepath
+    value: 'SimpleWithManagedIdentities/VanillaDeployment.bicep'
+  - name: arm_template_filepath
+    value: '$(Pipeline.Workspace)/BicepArtifacts/services.json'
+  - name: app_name
+    value: 'identitydemo-123654'
+
+stages:
+- stage: Build
+
+  jobs:
+  - job: Bicep
+    steps:
+      - task: AzureCLI@2
+        displayName: Build ARM Template from bicep file
+        inputs:
+          azureSubscription: '${{variables.subscription_name}}'
+          scriptType: ps
+          scriptLocation: inlineScript
+          inlineScript: |
+            az --version
+            az bicep build --file SimpleWithManagedIdentities/VanillaDeployment.bicep
+
+      - task: AzureResourceManagerTemplateDeployment@3
+        displayName: 'Deploy ARM Templates'
+        inputs:
+          azureResourceManagerConnection: 'Azure'
+          subscriptionId: '92dba6c6-2cf8-46ad-9d75-8674f0f66b9a'
+          resourceGroupName: 'testing'
+          location: 'Australia East'
+          csmFile: SimpleWithManagedIdentities/VanillaDeployment.json
+          csmParametersFile: SimpleWithManagedIdentities/VanillaDeploymentParameters.json
+          deploymentMode: Incremental
+          
+  - job: AzureFunction
+    dependsOn: 
+    - Bicep
+    steps:      
+      - task: DotNetCoreCLI@2
+        displayName: build
+        inputs:
+          command: 'build'
+          projects: AzureIdentityDemo/AzureIdentityDemo.sln
+          arguments: --output $(System.DefaultWorkingDirectory)/published_backend --configuration Release
+
+      - task: ArchiveFiles@2
+        displayName: 'Archive API artifact files'
+        inputs:
+          rootFolderOrFile: '$(System.DefaultWorkingDirectory)/published_backend'
+          includeRootFolder: false
+          archiveType: zip
+          archiveFile: $(Build.ArtifactStagingDirectory)/api.$(Build.BuildId).zip
+          replaceExistingArchive: true
+
+      - task: AzureFunctionApp@1
+        displayName: 'Azure functions App deploy'
+        inputs:
+          azureSubscription: '${{variables.subscription_name}}'
+          appType: 'functionApp'
+          appName: '${{variables.app_name}}'
+          package: $(Build.ArtifactStagingDirectory)/api.$(Build.BuildId).zip 
+          deploymentMethod: 'runFromPackage'
+
