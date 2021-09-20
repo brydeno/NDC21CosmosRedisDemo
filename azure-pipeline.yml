@@ -15,7 +15,7 @@ variables:
   - name: arm_template_filepath
     value: '$(Pipeline.Workspace)/BicepArtifacts/services.json'
   - name: app_name
-    value: 'lockingdemo-123654'
+    value: 'lockingdemo'
 
 stages:
 - stage: Build
