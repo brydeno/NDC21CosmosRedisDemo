@@ -81,13 +81,13 @@ namespace Locking
 			}
 		}
 
-		public async Task<T?> PerformWhileLocked<T>(string id, Func<LockToken, Task<T?>> doStuff)
+		public async Task<T> PerformWhileLocked<T>(string id, Func<LockToken, Task<T>> doStuff)
 		{
 			var lockToken = new StringLockToken(id);
 			return await PerformWhileLocked(lockToken, doStuff);
 		}
 
-		public async Task<T?> PerformWhileLocked<T>(LockToken lockToken, Func<LockToken, Task<T?>> doStuff)
+		public async Task<T> PerformWhileLocked<T>(LockToken lockToken, Func<LockToken, Task<T>> doStuff)
 		{
 			string id = lockToken.GetId();
 			// This dependency provides a parent for the Acquire, Leave and anything we do while locked.

@@ -1,4 +1,7 @@
-﻿namespace Locking
+﻿using System;
+using System.Threading.Tasks;
+
+namespace Locking
 {
     public abstract class LockToken
     {      
@@ -25,10 +28,10 @@
 
     public interface ILockService
     {
-        public Task<T?> PerformWhileLocked<T>(LockToken token, Func<LockToken, Task<T?>> doStuff);
+        public Task<T> PerformWhileLocked<T>(LockToken token, Func<LockToken, Task<T>> doStuff);
         public Task PerformWhileLocked(LockToken token, Func<LockToken, Task> doStuff);
         public Task PerformWhileLocked(string id, Func<LockToken, Task> doStuff);
-        public Task<T?> PerformWhileLocked<T>(string id, Func<LockToken, Task<T?>> doStuff);
+        public Task<T> PerformWhileLocked<T>(string id, Func<LockToken, Task<T>> doStuff);
     }
 
     public class LockingException : Exception
