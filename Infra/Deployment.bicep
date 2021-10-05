@@ -133,7 +133,7 @@ resource website 'Microsoft.Web/sites@2020-06-01' = {
         }
         {
           name: 'CosmosDb:Account'
-          value: cosmos.properties.documentEndpoint
+          value: cosmos.listKeys().primaryMasterKey
         }
         {
           name: 'CosmosDb:DatabaseName'
