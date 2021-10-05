@@ -149,7 +149,7 @@ resource website 'Microsoft.Web/sites@2020-06-01' = {
         }
         {
           name: 'Redis:connectString'
-          value: '${redis.name}.redis.cache.windows.net:6380,password=${redis.listKeys().primaryKey}'          
+          value: '${redis.name}.redis.cache.windows.net:6380,password=${redis.listKeys().primaryKey},ssl=True,abortConnect=False'          
         }
       ]
     }
