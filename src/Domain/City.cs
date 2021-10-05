@@ -1,6 +1,7 @@
 ﻿using AzureGems.Repository.Abstractions;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Text;
 
 namespace Domain
@@ -10,6 +11,7 @@ namespace Domain
         public int ZombieCount { get; set; }
         public int KangarooCount { get; set; }
         public int HumanCount { get; set; }
+        [Key]
         public string Name { get { return Id; } set { Id = value; } }
         public string State { get; set; }
 

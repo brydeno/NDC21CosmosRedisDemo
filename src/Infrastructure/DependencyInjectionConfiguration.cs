@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Text;
 
 namespace Infrastructure
@@ -30,10 +31,29 @@ namespace Infrastructure
 			services.AddCosmosDb(builder =>
 			{
 				var cosmosSection = configuration.GetSection("CosmosDb");
+				string authKey = "";
+				string serviceEndPoint = "";
+
+				// Use this generic builder to parse the connection string
+				DbConnectionStringBuilder strBuilder = new DbConnectionStringBuilder
+				{
+					ConnectionString = cosmosSection["Account"]
+				};
+
+				if (strBuilder.TryGetValue("AccountKey", out object key))
+				{
+					authKey = key.ToString();
+				}
+
+				if (strBuilder.TryGetValue("AccountEndpoint", out object uri))
+				{
+					serviceEndPoint = uri.ToString();
+				}
+
 				builder
-					.Connect(endPoint: cosmosSection["EndPoint"], cosmosSection["AuthKey"])
+					.Connect(endPoint: serviceEndPoint, authKey)
 					.UseDatabase(databaseId: "ZombieApocalypse")
-					.WithSharedThroughput(4000)
+					.WithSharedThroughput(400)
 					.WithContainerConfig(c =>
 					{
 						c.AddContainer<City>(containerId: "Cities", partitionKeyPath: "/State");
@@ -46,33 +66,6 @@ namespace Infrastructure
 							.AddTelemetry(sp.GetRequiredService<TelemetryClient>())
 							.AddLockService(sp.GetRequiredService<ILockService>()));
 
-//			services.AddDbContextPool<AuctionsPlusSqlContext>(options =>
-//			{
-//				options.UseSqlServer(
-//					configuration.GetConnectionString("AuctionsPlusSqlDB"),
-//					b => b.MigrationsAssembly("AuctionsPlus.AuctionPlatform.Infrastructure"));
-//			});
-
-//			services.AddScoped<IAuctionsPlusSqlRepository, AuctionsPlusSqlRepository>();
-
-//			// Separate User repository as per Rodel's comment on the story
-//			services.AddScoped<IUserRepository, UserRepository>();
-
-//			services.AddScoped<IDateTimeProvider, MachineDateTimeProvider>();
-
-//			services.AddDbContextPool<AuctionsPlusLogSqlContext>(options =>
-//			{
-//				options.UseSqlServer(
-//					configuration.GetConnectionString("AuctionsPlusLogSqlDB"),
-//					b => b.MigrationsAssembly("AuctionsPlus.AuctionPlatform.Infrastructure"));
-
-//#if DEBUG
-//				// Most project shouldn't expose sensitive data, which is why we are
-//				// limiting to be available only in DEBUG mode.
-//				// If this is not, SQL "parameters" will be '?' instead of actual values.
-//				options.EnableSensitiveDataLogging();
-//#endif
-//			});
 			return services;
 		}
 

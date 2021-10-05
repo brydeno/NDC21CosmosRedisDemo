@@ -143,6 +143,10 @@ resource website 'Microsoft.Web/sites@2020-06-01' = {
           name: 'CosmosDb:ContainerName'
           value: containerName
         }
+        {
+          name: 'Redis:connectString'
+          value: redis.properties.accessKeys.primaryKey
+        }
       ]
     }
   }

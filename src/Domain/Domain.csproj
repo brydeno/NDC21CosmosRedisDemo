@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="AzureGems.Repository.Abstractions" Version="2.1.0" />
+    <PackageReference Include="System.ComponentModel.Annotations" Version="4.7.0" />
   </ItemGroup>
 
 </Project>
