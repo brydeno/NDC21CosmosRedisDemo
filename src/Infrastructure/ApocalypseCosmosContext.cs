@@ -84,6 +84,13 @@ namespace Infrastructure
 				// So all of this code executes with the lock active.
 				// The locktoken is used to confirm we have the write thing locked when we update.
 				var city = await GetCity(cityName);
+				if (city == null)
+                {
+					city = new City
+					{
+						Name = cityName
+					};
+                }
 				city.KangarooCount = kangarooCount;
 				city.HumanCount = humanCount;
 				city.ZombieCount = zombieCount;

@@ -68,6 +68,13 @@ namespace Infrastructure
 			try
 			{
 				var city = await GetCity(cityName);
+				if (city == null)
+				{
+					city = new City
+					{
+						Name = cityName
+					};
+				}
 				city.KangarooCount = kangarooCount;
 				city.HumanCount = humanCount;
 				city.ZombieCount = zombieCount;
@@ -107,7 +114,5 @@ namespace Infrastructure
 				await trans.RollbackAsync();
 			}
 		}
-
-
 	}
 }

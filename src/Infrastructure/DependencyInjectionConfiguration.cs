@@ -51,7 +51,7 @@ namespace Infrastructure
 				}
 
 				builder
-					.Connect(endPoint: serviceEndPoint, authKey)
+					.Connect(endPoint: cosmosSection["Endpoint"], cosmosSection["AuthKey"])
 					.UseDatabase(databaseId: "ZombieApocalypse")
 					.WithSharedThroughput(400)
 					.WithContainerConfig(c =>

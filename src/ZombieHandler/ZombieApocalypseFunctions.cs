@@ -26,7 +26,7 @@ namespace ZombieHandler
 
         [FunctionName("GetCurrentInformation")]
         public async Task<IActionResult> GetCurrentInformation(
-            [HttpTrigger(AuthorizationLevel.Function, "get")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get")] HttpRequest req,
             ILogger log)
         {
             return new OkObjectResult(await _apocalypseRequestHandler.GetCurrentInformation());
@@ -34,7 +34,7 @@ namespace ZombieHandler
 
         [FunctionName("Calculate")]
         public async Task<IActionResult> Calculate(
-            [HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequest req,
             ILogger log)
         {
             await _apocalypseRequestHandler.Calculate();
