@@ -76,7 +76,7 @@ namespace Infrastructure
 			});
 		}
 
-		public async Task SetInformation(string cityName, int kangarooCount, int humanCount, int zombieCount)
+		public async Task SetInformation(string cityName, int kangarooCount, int humanCount, int zombieCount, string state)
         {
 			using var dependency = new Dependency(_telemetryClient, "Cities", "SetInformation", $"{cityName}");
 			await _lockService.PerformWhileLocked(cityName, async (lockToken) =>
