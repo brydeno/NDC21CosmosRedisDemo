@@ -8,8 +8,10 @@ using System.Threading.Tasks;
 
 namespace Infrastructure
 {
-   public class ApocalypseSQLContext : DbContext, IApocalypseRequestHandler
-    {
+
+
+	public class ApocalypseSQLContext : DbContext, ISQLRequestHandler
+	{
         public ApocalypseSQLContext(DbContextOptions<ApocalypseSQLContext> options) : base(options)
         {
         }
@@ -61,7 +63,7 @@ namespace Infrastructure
             }
 		}
 
-		public async Task SetInformation(string cityName, int kangarooCount, int humanCount, int zombieCount)
+		public async Task SetInformation(string cityName, int kangarooCount, int humanCount, int zombieCount, string state)
 		{
 			using var dependency = new Dependency(_telemetryClient, "SQL", "SetInformation", $"{cityName}");
 			var trans = await Database.BeginTransactionAsync(IsolationLevel.RepeatableRead);
@@ -72,7 +74,8 @@ namespace Infrastructure
 				{
 					city = new City
 					{
-						Name = cityName
+						Name = cityName,
+						State = state
 					};
 				}
 				city.KangarooCount = kangarooCount;

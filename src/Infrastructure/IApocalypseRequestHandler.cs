@@ -13,4 +13,12 @@ namespace Infrastructure
         public Task SetInformation(string cityName, int kangarooCount, int humanCount, int zombieCount, string state);
         public Task Calculate();
     }
+
+    public interface ICosmosRequestHandler : IApocalypseRequestHandler
+    {
+    }
+
+    public interface ISQLRequestHandler : IApocalypseRequestHandler
+    {
+    }
 }

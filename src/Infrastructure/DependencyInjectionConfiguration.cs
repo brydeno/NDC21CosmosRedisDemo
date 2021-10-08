@@ -61,10 +61,14 @@ namespace Infrastructure
 			});
 
 			services.AddCosmosContext<ApocalypseCosmosContext>();
-			services.AddTransient<IApocalypseRequestHandler, ApocalypseCosmosContext>(sp =>
+			services.AddTransient<ICosmosRequestHandler, ApocalypseCosmosContext>(sp =>
 					sp.GetRequiredService<ApocalypseCosmosContext>()
 							.AddTelemetry(sp.GetRequiredService<TelemetryClient>())
 							.AddLockService(sp.GetRequiredService<ILockService>()));
+
+			services.AddTransient<ISQLRequestHandler, ApocalypseSQLContext>(sp =>
+					sp.GetRequiredService<ApocalypseSQLContext>()
+							.AddTelemetry(sp.GetRequiredService<TelemetryClient>()));
 
 			return services;
 		}

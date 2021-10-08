@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Infrastructure
 {
-    public class ApocalypseCosmosContext : CosmosContext, IApocalypseRequestHandler
+	public class ApocalypseCosmosContext : CosmosContext, ICosmosRequestHandler
 	{
 		public IRepository<City> Cities { get; set; }
 
@@ -63,7 +63,7 @@ namespace Infrastructure
 
 		public async Task UpdateCurrentInformation(string cityName, int kangarooChange, int humanChange, int zombieChange)
 		{
-			using var dependency = new Dependency(_telemetryClient, "Cities", "UpdateCurrentInformation", $"{cityName}");
+			using var dependency = new Dependency(_telemetryClient, "Cosmos", "UpdateCurrentInformation", $"{cityName}");
 			await _lockService.PerformWhileLocked(cityName, async (lockToken) =>
 			{
 				// So all of this code executes with the lock active.
@@ -78,7 +78,7 @@ namespace Infrastructure
 
 		public async Task SetInformation(string cityName, int kangarooCount, int humanCount, int zombieCount, string state)
         {
-			using var dependency = new Dependency(_telemetryClient, "Cities", "SetInformation", $"{cityName}");
+			using var dependency = new Dependency(_telemetryClient, "Cosmos", "SetInformation", $"{cityName}");
 			await _lockService.PerformWhileLocked(cityName, async (lockToken) =>
 			{
 				// So all of this code executes with the lock active.
@@ -88,7 +88,8 @@ namespace Infrastructure
                 {
 					city = new City
 					{
-						Name = cityName
+						Name = cityName,
+						State = state
 					};
                 }
 				city.KangarooCount = kangarooCount;
@@ -101,7 +102,7 @@ namespace Infrastructure
 
 		public async Task Calculate()
         {
-			using var dependency = new Dependency(_telemetryClient, "Cities", "Calculate", $"All");
+			using var dependency = new Dependency(_telemetryClient, "Cosmos", "Calculate", $"All");
 			var tasks = new List<Task>();
 			foreach (var city in await GetCities())
             {
@@ -112,7 +113,7 @@ namespace Infrastructure
 
 		public async Task CalculateCity(string cityName)
 		{
-			using var dependency = new Dependency(_telemetryClient, "Cities", "CalculateCity", $"{cityName}");
+			using var dependency = new Dependency(_telemetryClient, "Cosmos", "CalculateCity", $"{cityName}");
 			await _lockService.PerformWhileLocked(cityName, async (lockToken) =>
 			{
 				// So all of this code executes with the lock active.
