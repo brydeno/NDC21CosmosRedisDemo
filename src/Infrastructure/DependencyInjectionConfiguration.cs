@@ -3,6 +3,7 @@ using AzureGems.Repository.CosmosDB;
 using Domain;
 using Locking;
 using Microsoft.ApplicationInsights;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -51,13 +52,21 @@ namespace Infrastructure
 				}
 
 				builder
-					.Connect(endPoint: cosmosSection["Endpoint"], cosmosSection["AuthKey"])
+					.Connect(endPoint: serviceEndPoint, authKey)
 					.UseDatabase(databaseId: "ZombieApocalypse")
 					.WithSharedThroughput(400)
 					.WithContainerConfig(c =>
 					{
 						c.AddContainer<City>(containerId: "Cities", partitionKeyPath: "/State");
 					});
+			});
+			var sqlSection = configuration.GetSection("SQL");
+			services.AddDbContextPool<ApocalypseSQLContext>(options =>
+			{
+				options.UseSqlServer(
+					sqlSection["connectString"],
+					b => b.MigrationsAssembly("Infrastructure"));
+
 			});
 
 			services.AddCosmosContext<ApocalypseCosmosContext>();
