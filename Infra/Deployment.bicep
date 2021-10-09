@@ -91,15 +91,6 @@ resource sqlServer 'Microsoft.Sql/servers@2020-11-01-preview' = {
   }
 }
 
-resource aadLogin 'Microsoft.Sql/servers/administrators@2019-06-01-preview' = {
-  name: '${sqlServer.name}/aadLogin'
-  properties: {
-      administratorType: 'ActiveDirectory'
-      login: 'login2'
-      sid: website.identity.principalId
-      tenantId: website.identity.tenantId
-  }
-}
 
 resource db 'Microsoft.Sql/servers/databases@2019-06-01-preview' = {
   name: '${sqlServer.name}/${databaseName}' 
@@ -172,7 +163,7 @@ resource website 'Microsoft.Web/sites@2020-06-01' = {
         }
         {
           name: 'CosmosDb:Endpoint'
-          value: cosmos.properties.documentEndpoint
+          value: cosmos.properties.documentEndpoint 
         }
         {
           name: 'CosmosDb:AuthKey'
