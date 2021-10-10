@@ -19,7 +19,7 @@ var redisName = toLower(applicationName)
 var websiteName = applicationName // why not just use the param directly?
 var hostingPlanName = applicationName // why not just use the param directly?
 var dbAdminName = 'testing'
-var dbAdminPassword = 'X${uniqueString(entropy)}Z#!'
+var dbAdminPassword = 'Xtjur2vvo3gy7oZ#!'
 
 resource redis 'Microsoft.Cache/Redis@2020-12-01' = {
   name: redisName
@@ -105,7 +105,7 @@ resource kvConnectionString 'Microsoft.KeyVault/vaults/secrets@2016-10-01' = {
     keyVault
   ]
   properties: {
-      value: 'Data Source=tcp:${sqlServer.properties.fullyQualifiedDomainName},1433;Initial Catalog=${db.name};User Id=${dbAdminName};Password=${dbAdminPassword};'
+      value: 'Data Source=tcp:${sqlServer.properties.fullyQualifiedDomainName},1433;Initial Catalog=${databaseName};User Id=${dbAdminName};Password=${dbAdminPassword};'
   }
 }
 
