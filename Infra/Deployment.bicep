@@ -5,9 +5,7 @@ param location string = resourceGroup().location
 
 param databaseName string = 'LockingDemo'
 param containerName string = 'Items'
-
-param sqlAdminTenant string = 'ac2f7c34-b935-48e9-abdc-11e5d4fcb2b0'
-param sqlAdminUserId string = 'd5583623-44e1-4d75-b4ba-612dec0508ac'
+param entropy string = newGuid()
 
 var storageAccountName = 'stor54364'
 
@@ -15,10 +13,13 @@ var storageAccountName = 'stor54364'
 var contributorRoleId = 'b24988ac-6180-42a0-ab88-20f7382dd24c'
 
 var cosmosAccountName = toLower(applicationName)
+var keyVaultName = toLower(applicationName)
 var sqlName = toLower(applicationName)
 var redisName = toLower(applicationName)
 var websiteName = applicationName // why not just use the param directly?
 var hostingPlanName = applicationName // why not just use the param directly?
+var dbAdminName = 'admin'
+var dbAdminPassword = 'X${uniqueString(entropy)}Z#!'
 
 resource redis 'Microsoft.Cache/Redis@2020-12-01' = {
   name: redisName
@@ -53,6 +54,18 @@ resource cosmos 'Microsoft.DocumentDB/databaseAccounts@2020-04-01' = {
   }
 }
 
+resource keyVault 'Microsoft.KeyVault/vaults@2019-09-01' = {
+  name: keyVaultName
+  location: location 
+  properties: {
+      sku: {
+          family: 'A'
+          name: 'standard'
+      }
+      tenantId: subscription().tenantId
+  }
+}
+
 resource database 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2021-03-15' = {
   name: '${cosmos.name}/demo'
   properties: {
@@ -80,17 +93,17 @@ resource sqlServer 'Microsoft.Sql/servers@2020-11-01-preview' = {
   name: sqlName
   location: location
   properties: {
-    administrators: {
-      administratorType: 'ActiveDirectory'
-      principalType: 'User'
-      login: 'admin1'
-      sid: sqlAdminUserId
-      tenantId: sqlAdminTenant
-      azureADOnlyAuthentication: true
-    }
+    administratorLogin: dbAdminName
+    administratorLoginPassword: dbAdminPassword
   }
 }
 
+resource kvConnectionString 'Microsoft.KeyVault/vaults/secrets@2016-10-01' = {
+  name: '${keyVaultName}/DatabaseConnectionString'
+  properties: {
+      value: 'Data Source=tcp:${sqlServer.properties.fullyQualifiedDomainName},1433;Initial Catalog=${db.name};User Id=${dbAdminName};Password=${dbAdminPassword};'
+  }
+}
 
 resource db 'Microsoft.Sql/servers/databases@2019-06-01-preview' = {
   name: '${sqlServer.name}/${databaseName}' 
@@ -111,7 +124,7 @@ resource farm 'Microsoft.Web/serverFarms@2020-06-01' = {
   }
 }
 
-resource appinsights 'Microsoft.Insights/components@2020-02-02-preview' ={
+resource appinsights 'Microsoft.Insights/components@2020-02-02-preview' = {
   name: '${websiteName}-ai'
   location: location
   kind: 'web'
@@ -183,7 +196,7 @@ resource website 'Microsoft.Web/sites@2020-06-01' = {
         }
         {
           name: 'SQL:connectString'
-          value: 'Data Source=tcp:${sqlServer.properties.fullyQualifiedDomainName},1433;Initial Catalog=${db.name};Trusted_Connection=True;'
+          value: '@Microsoft.KeyVault(SecretUri=${kvConnectionString.properties.secretUri})'
         }
       ]
     }
@@ -198,5 +211,24 @@ resource cosmosRole 'Microsoft.Authorization/roleAssignments@2020-04-01-preview'
     principalType: 'ServicePrincipal'
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', contributorRoleId)
     principalId: website.identity.principalId
+  }
+}
+
+
+resource kvAccessPolicy 'Microsoft.KeyVault/vaults/accessPolicies@2019-09-01' = {
+  name: '${keyVaultName}/add'
+  properties: {
+    accessPolicies:[
+      {
+        tenantId: subscription().tenantId
+        objectId: website.identity.principalId
+        permissions:{
+          secrets: [
+            'get'
+            'list'
+          ]
+        }
+      }
+    ]
   }
 }
