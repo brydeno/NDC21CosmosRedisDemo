@@ -1,4 +1,5 @@
-﻿using AzureGems.CosmosDB;
+﻿using AutoMapper;
+using AzureGems.CosmosDB;
 using AzureGems.Repository.CosmosDB;
 using Domain;
 using Locking;
@@ -10,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Reflection;
 using System.Text;
 
 namespace Infrastructure
@@ -18,6 +20,7 @@ namespace Infrastructure
     {
 		public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
 		{
+			services.AddAutoMapper(Assembly.GetExecutingAssembly());
 			services.AddTransient<ILoggerFactory, LoggerFactory>();
 			services.AddLockService(builder =>
 			{
@@ -57,7 +60,7 @@ namespace Infrastructure
 					.WithSharedThroughput(400)
 					.WithContainerConfig(c =>
 					{
-						c.AddContainer<City>(containerId: "Cities", partitionKeyPath: "/State");
+						c.AddContainer<CosmosCity>(containerId: "Cities", partitionKeyPath: "/State");
 					});
 			});
 			var sqlSection = configuration.GetSection("SQL");
@@ -72,6 +75,7 @@ namespace Infrastructure
 			services.AddCosmosContext<ApocalypseCosmosContext>();
 			services.AddTransient<ICosmosRequestHandler, ApocalypseCosmosContext>(sp =>
 					sp.GetRequiredService<ApocalypseCosmosContext>()
+							.AddMapper(sp.GetRequiredService<IMapper>())
 							.AddTelemetry(sp.GetRequiredService<TelemetryClient>())
 							.AddLockService(sp.GetRequiredService<ILockService>()));
 
