@@ -18,7 +18,7 @@ var sqlName = toLower(applicationName)
 var redisName = toLower(applicationName)
 var websiteName = applicationName // why not just use the param directly?
 var hostingPlanName = applicationName // why not just use the param directly?
-var dbAdminName = 'admin'
+var dbAdminName = 'testing'
 var dbAdminPassword = 'X${uniqueString(entropy)}Z#!'
 
 resource redis 'Microsoft.Cache/Redis@2020-12-01' = {
