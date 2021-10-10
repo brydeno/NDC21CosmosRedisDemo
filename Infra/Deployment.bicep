@@ -100,6 +100,9 @@ resource sqlServer 'Microsoft.Sql/servers@2020-11-01-preview' = {
 
 resource kvConnectionString 'Microsoft.KeyVault/vaults/secrets@2016-10-01' = {
   name: '${keyVaultName}/DatabaseConnectionString'
+  dependsOn:[
+    keyVault
+  ]
   properties: {
       value: 'Data Source=tcp:${sqlServer.properties.fullyQualifiedDomainName},1433;Initial Catalog=${db.name};User Id=${dbAdminName};Password=${dbAdminPassword};'
   }
