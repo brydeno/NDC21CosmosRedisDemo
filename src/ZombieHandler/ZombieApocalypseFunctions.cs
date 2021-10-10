@@ -54,7 +54,7 @@ namespace ZombieHandler
 
         [FunctionName("UpdateCurrentInformation")]
         public async Task<IActionResult> UpdateCurrentInformation(
-            [HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequest req,
             ILogger log)
         {
             ChangeCityDTO cityChange = await JsonSerializer.DeserializeAsync<ChangeCityDTO>(req.Body);
@@ -64,7 +64,7 @@ namespace ZombieHandler
 
         [FunctionName("SetInformation")]
         public async Task<IActionResult> SetInformation(
-            [HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequest req,
             ILogger log)
         {
             CityDTO city = await JsonSerializer.DeserializeAsync<CityDTO>(req.Body);
