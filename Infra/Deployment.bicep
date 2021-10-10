@@ -179,20 +179,8 @@ resource website 'Microsoft.Web/sites@2020-06-01' = {
           value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};EndpointSuffix=${environment().suffixes.storage};AccountKey=${listKeys(storageAccount.id, storageAccount.apiVersion).keys[0].value}'
         }
         {
-          name: 'CosmosDb:Endpoint'
-          value: cosmos.properties.documentEndpoint 
-        }
-        {
-          name: 'CosmosDb:AuthKey'
-          value: cosmos.listKeys().primaryMasterKey
-        }
-        {
-          name: 'CosmosDb:DatabaseName'
-          value: databaseName
-        }
-        {
-          name: 'CosmosDb:ContainerName'
-          value: containerName
+          name: 'CosmosDb:Account'
+          value: 'AccountEndpoint=${cosmos.properties.documentEndpoint};AccountKey=${cosmos.listKeys().primaryMasterKey};'
         }
         {
           name: 'Redis:connectString'
