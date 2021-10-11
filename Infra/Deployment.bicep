@@ -99,6 +99,14 @@ resource sqlServer 'Microsoft.Sql/servers@2020-11-01-preview' = {
   }
 }
 
+resource firewallRules 'Microsoft.Sql/servers/firewallRules@2014-04-01' = {
+  name: '${sqlName}/AllowAllWindowsAzureIps'
+  properties: {
+    startIpAddress: '0.0.0.0'
+    endIpAddress: '0.0.0.0'
+  }
+}
+
 resource kvConnectionString 'Microsoft.KeyVault/vaults/secrets@2016-10-01' = {
   name: '${keyVaultName}/DatabaseConnectionString'
   dependsOn:[
