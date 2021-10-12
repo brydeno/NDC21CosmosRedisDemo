@@ -1,4 +1,6 @@
-﻿using AzureGems.Repository.Abstractions;
+﻿//using AutoMapper;
+using AutoMapper;
+using AzureGems.Repository.Abstractions;
 using Domain;
 using Locking;
 using Microsoft.ApplicationInsights;
@@ -11,10 +13,18 @@ namespace Infrastructure
 {
 	public class ApocalypseCosmosContext : CosmosContext, ICosmosRequestHandler
 	{
-		public IRepository<City> Cities { get; set; }
+		public IRepository<CosmosCity> Cities { get; set; }
 
 		private TelemetryClient _telemetryClient;
 		private ILockService _lockService;
+		private IMapper _mapper;
+
+		public ApocalypseCosmosContext AddMapper(IMapper mapper)
+		{
+			_mapper = mapper;
+			return this;
+		}
+
 		public ApocalypseCosmosContext AddLockService(ILockService lockService)
 		{
 			_lockService = lockService;
@@ -29,15 +39,15 @@ namespace Infrastructure
 
 		private async Task<City> GetCity(string name)
         {
-			using var dependency = new Dependency(_telemetryClient, "Cosmos", "GetCity", $"{name}");
-			IEnumerable<City> cities = await Cities.Get(q => name == q.Name);
+			using var dependency = new Dependency(_telemetryClient, "Cosmos", "GetCity", $"{name}");		
+			IEnumerable<City> cities = _mapper.Map<IEnumerable<City>>(await Cities.Get(q => name == q.Name));
 			return cities.SingleOrDefault();
 		}
 
 		private async Task<IEnumerable<City>> GetCities()
 		{
 			using var dependency = new Dependency(_telemetryClient, "Cosmos", "GetCities", $"ALL");
-			return await Cities.GetAll();
+			return _mapper.Map<IEnumerable<City>>(await Cities.GetAll());
 		}
 
 		public async Task UpdateCity(City city, LockToken lockToken)
@@ -46,7 +56,7 @@ namespace Infrastructure
 			// First make sure that the city is locked for writing
 			if ((lockToken.GetId() == city.Name))
 			{
-				await Cities.Update(city);
+				await Cities.Update(_mapper.Map<CosmosCity>(city));
 			}
 			else
 			{

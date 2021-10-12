@@ -2,17 +2,19 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
 
 namespace Domain
 {
-    public class City : BaseEntity
+    public class City
     {
+        [Key]
+        public int Id { get; set; }
         public int ZombieCount { get; set; }
         public int KangarooCount { get; set; }
         public int HumanCount { get; set; }
-        [Key]
-        public string Name { get { return Id; } set { Id = value; } }
+        public string Name { get; set; }
         public string State { get; set; }
 
         // This is where the magic happens
