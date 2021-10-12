@@ -10,10 +10,10 @@ namespace Domain
     public class City
     {
         [Key]
-        public int Id { get; set; }
-        public int ZombieCount { get; set; }
-        public int KangarooCount { get; set; }
-        public int HumanCount { get; set; }
+        public Int64 Id { get; set; }
+        public Int64 ZombieCount { get; set; }
+        public Int64 KangarooCount { get; set; }
+        public Int64 HumanCount { get; set; }
         public string Name { get; set; }
         public string State { get; set; }
 

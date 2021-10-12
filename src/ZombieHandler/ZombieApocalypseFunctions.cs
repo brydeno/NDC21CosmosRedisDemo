@@ -23,8 +23,6 @@ namespace ZombieHandler
             _cosmos = cosmos;
         }
 
-        //    public Task UpdateCurrentInformation(string cityName, int kangarooChange, int humanChange, int zombieChange);
-        //            public Task SetInformation(string cityName, int kangarooCount, int humanCount, int zombieCount);
 
         public IApocalypseRequestHandler GetRequestHandler(HttpRequest req)
         {
@@ -73,9 +71,10 @@ namespace ZombieHandler
             foreach (var city in cities)
             {
                 int population = int.Parse(city.Population);
-                int kp = (int)Math.Round(population * (0.8 + (random.NextDouble())));
-                int zp = (int)Math.Round(population * (0.8 + (random.NextDouble())));
-                await GetRequestHandler(req).SetInformation(city.City, kp, population, zp, city.State);
+                int kp = (int)Math.Round(population * (0.8 + (random.NextDouble() * 0.4)));
+                int zp = (int)Math.Round(population * (0.8 + (random.NextDouble() * 0.4)));
+                await _cosmos.SetInformation(city.City, kp, population, zp, city.State);
+                await _sql.SetInformation(city.City, kp, population, zp, city.State);
             }
             return new OkResult();
         }

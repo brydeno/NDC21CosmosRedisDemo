@@ -1,7 +1,4 @@
-﻿using AutoMapper;
-using AzureGems.CosmosDB;
-using AzureGems.Repository.CosmosDB;
-using Domain;
+﻿using Domain;
 using Locking;
 using Microsoft.ApplicationInsights;
 using Microsoft.EntityFrameworkCore;
@@ -20,7 +17,6 @@ namespace Infrastructure
     {
 		public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
 		{
-			services.AddAutoMapper(Assembly.GetExecutingAssembly());
 			services.AddTransient<ILoggerFactory, LoggerFactory>();
 			services.AddLockService(builder =>
 			{
@@ -32,37 +28,6 @@ namespace Infrastructure
 								retry: TimeSpan.FromMilliseconds(ParseOrDefault(redisSection["retry"], 10)));
 			});
 
-			services.AddCosmosDb(builder =>
-			{
-				var cosmosSection = configuration.GetSection("CosmosDb");
-				string authKey = "";
-				string serviceEndPoint = "";
-
-				// Use this generic builder to parse the connection string
-				DbConnectionStringBuilder strBuilder = new DbConnectionStringBuilder
-				{
-					ConnectionString = cosmosSection["Account"]
-				};
-
-				if (strBuilder.TryGetValue("AccountKey", out object key))
-				{
-					authKey = key.ToString();
-				}
-
-				if (strBuilder.TryGetValue("AccountEndpoint", out object uri))
-				{
-					serviceEndPoint = uri.ToString();
-				}
-
-				builder
-					.Connect(endPoint: serviceEndPoint, authKey)
-					.UseDatabase(databaseId: "ZombieApocalypse")
-					.WithSharedThroughput(400)
-					.WithContainerConfig(c =>
-					{
-						c.AddContainer<CosmosCity>(containerId: "Cities", partitionKeyPath: "/State");
-					});
-			});
 			var sqlSection = configuration.GetSection("SQL");
 			services.AddDbContextPool<ApocalypseSQLContext>(options =>
 			{
@@ -72,17 +37,10 @@ namespace Infrastructure
 
 			});
 
-			services.AddCosmosContext<ApocalypseCosmosContext>();
-			services.AddTransient<ICosmosRequestHandler, ApocalypseCosmosContext>(sp =>
-					sp.GetRequiredService<ApocalypseCosmosContext>()
-							.AddMapper(sp.GetRequiredService<IMapper>())
-							.AddTelemetry(sp.GetRequiredService<TelemetryClient>())
-							.AddLockService(sp.GetRequiredService<ILockService>()));
-
 			services.AddTransient<ISQLRequestHandler, ApocalypseSQLContext>(sp =>
 					sp.GetRequiredService<ApocalypseSQLContext>()
 							.AddTelemetry(sp.GetRequiredService<TelemetryClient>()));
-
+			services.AddTransient<ICosmosRequestHandler, ApocalypseCosmosContext>();
 			return services;
 		}
 
