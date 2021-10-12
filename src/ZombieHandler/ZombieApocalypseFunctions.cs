@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using Infrastructure;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace ZombieHandler
 {
@@ -67,8 +68,15 @@ namespace ZombieHandler
             [HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequest req,
             ILogger log)
         {
-            CityDTO city = await JsonSerializer.DeserializeAsync<CityDTO>(req.Body);
-            await GetRequestHandler(req).SetInformation(city.CityName,city.KangarooCount,city.HumanCount,city.ZombieCount,city.State);
+            var random = new Random();
+            IEnumerable<CitiesDTO> cities = await JsonSerializer.DeserializeAsync<IEnumerable<CitiesDTO>>(req.Body);
+            foreach (var city in cities)
+            {
+                int population = int.Parse(city.Population);
+                int kp = (int)Math.Round(population * (0.8 + (random.NextDouble())));
+                int zp = (int)Math.Round(population * (0.8 + (random.NextDouble())));
+                await GetRequestHandler(req).SetInformation(city.City, kp, population, zp, city.State);
+            }
             return new OkResult();
         }
     }
