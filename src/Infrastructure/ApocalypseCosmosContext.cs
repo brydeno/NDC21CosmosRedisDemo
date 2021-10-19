@@ -66,7 +66,7 @@ namespace Infrastructure
 
 		private async Task<City> GetCity(string name, string state)
 		{
-			using var dependency = new Dependency(_telemetryClient, "Cosmos", "GetCity", $"{name}");
+			using var dependency = new Dependency(_telemetryClient, "Cosmos", "GetCity2", $"{name}, {state}");
 			return CosmosCityToCity(await _container.ReadItemAsync<CosmosCity>(name, new PartitionKey(state)));
 		}
 
