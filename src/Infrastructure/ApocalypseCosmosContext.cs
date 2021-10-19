@@ -20,12 +20,11 @@ namespace Infrastructure
 		private ILockService _lockService;
 		private readonly Container _container;
 
-		public ApocalypseCosmosContext(ILockService lockService, TelemetryClient telemetryClient, IConfiguration configuration)
+		public ApocalypseCosmosContext(ILockService lockService, TelemetryClient telemetryClient, IConfiguration configuration, CosmosClient cosmosClient)
 		{
 			_lockService = lockService;
 			_telemetryClient = telemetryClient;
-			var cosmosSection = configuration.GetSection("CosmosDb");
-			_cosmosClient = new CosmosClient(cosmosSection["Account"]);
+			_cosmosClient = cosmosClient;
 			_container = _cosmosClient.GetDatabase("ZombieApocalypse").GetContainer("Cities");
 		}
 

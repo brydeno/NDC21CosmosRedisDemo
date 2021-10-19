@@ -1,6 +1,7 @@
 ﻿using Domain;
 using Locking;
 using Microsoft.ApplicationInsights;
+using Microsoft.Azure.Cosmos;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -40,7 +41,13 @@ namespace Infrastructure
 			services.AddTransient<ISQLRequestHandler, ApocalypseSQLContext>(sp =>
 					sp.GetRequiredService<ApocalypseSQLContext>()
 							.AddTelemetry(sp.GetRequiredService<TelemetryClient>()));
+			
+			services.AddSingleton((s) => {
+				var cosmosSection = configuration.GetSection("CosmosDb");
+				return new CosmosClient(cosmosSection["Account"]);
+			});
 			services.AddTransient<ICosmosRequestHandler, ApocalypseCosmosContext>();
+
 			return services;
 		}
 
