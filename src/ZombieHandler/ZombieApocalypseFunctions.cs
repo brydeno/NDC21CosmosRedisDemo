@@ -51,6 +51,23 @@ namespace ZombieHandler
             return new OkResult();
         }
 
+        [FunctionName("CalculateSQL")]
+        public async Task<IActionResult> CalculateSQL(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequest req,
+            ILogger log)
+        {
+            await _sql.Calculate();
+            return new OkResult();
+        }
+
+        [FunctionName("CalculateCosmos")]
+        public async Task<IActionResult> CalculateCosmos(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequest req,
+            ILogger log)
+        {
+            await _cosmos.Calculate();
+            return new OkResult();
+        }
         [FunctionName("UpdateCurrentInformation")]
         public async Task<IActionResult> UpdateCurrentInformation(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequest req,
