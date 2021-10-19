@@ -94,12 +94,10 @@ namespace Infrastructure
 		public async Task Calculate()
 		{
 			using var dependency = new Dependency(_telemetryClient, "SQL", "Calculate", $"All");
-			var tasks = new List<Task>();
 			foreach (var city in await GetCities())
 			{
-				tasks.Add(CalculateCity(city.Name));
+				await CalculateCity(city.Name);
 			}
-			await Task.WhenAll(tasks);
 		}
 
 		public async Task CalculateCity(string cityName)
