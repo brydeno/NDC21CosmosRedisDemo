@@ -23,8 +23,8 @@ namespace Infrastructure
 				var redisSection = configuration.GetSection("Redis");
 				builder
 					.Connect(connectionString: redisSection["connectString"])
-					.WithConfig(expiry: TimeSpan.FromMilliseconds(ParseOrDefault(redisSection["expiry"], 1000)),
-								wait: TimeSpan.FromMilliseconds(ParseOrDefault(redisSection["wait"], 100)),
+					.WithConfig(expiry: TimeSpan.FromMilliseconds(ParseOrDefault(redisSection["expiry"], 500)),
+								wait: TimeSpan.FromMilliseconds(ParseOrDefault(redisSection["wait"], 50)),
 								retry: TimeSpan.FromMilliseconds(ParseOrDefault(redisSection["retry"], 10)));
 			});
 
