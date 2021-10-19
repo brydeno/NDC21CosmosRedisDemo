@@ -64,6 +64,12 @@ namespace Infrastructure
 			return CosmosCityToCity(iterator.FirstOrDefault());
 		}
 
+		private async Task<City> GetCity(string name, string state)
+		{
+			using var dependency = new Dependency(_telemetryClient, "Cosmos", "GetCity", $"{name}");
+			return CosmosCityToCity(await _container.ReadItemAsync<CosmosCity>(name, new PartitionKey(state)));
+		}
+
 		private async Task<IEnumerable<City>> GetCities()
 		{
 			using var dependency = new Dependency(_telemetryClient, "Cosmos", "GetCities", $"ALL");
@@ -143,19 +149,19 @@ namespace Infrastructure
 			Shuffle(cities);
 			foreach (var city in cities)
             {
-				tasks.Add(CalculateCity(city.Name));
+				tasks.Add(CalculateCity(city.Name, city.State));
             }
 			await Task.WhenAll(tasks);
 		}
 
-		public async Task CalculateCity(string cityName)
+		public async Task CalculateCity(string cityName, string state)
 		{
 			using var dependency = new Dependency(_telemetryClient, "Cosmos", "CalculateCity", $"{cityName}");
 			await _lockService.PerformWhileLocked(cityName, async (lockToken) =>
 			{
 				// So all of this code executes with the lock active.
 				// The locktoken is used to confirm we have the write thing locked when we update.
-				var city = await GetCity(cityName);
+				var city = await GetCity(cityName, state);
 				city.Calculate();
 				await UpdateCity(city, lockToken);
 			});
