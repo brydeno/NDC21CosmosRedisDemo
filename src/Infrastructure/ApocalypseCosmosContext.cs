@@ -139,7 +139,9 @@ namespace Infrastructure
         {
 			using var dependency = new Dependency(_telemetryClient, "Cosmos", "Calculate", $"All");
 			var tasks = new List<Task>();
-			foreach (var city in await GetCities())
+			var cities = (await GetCities()).ToList();
+			Shuffle(cities);
+			foreach (var city in cities)
             {
 				tasks.Add(CalculateCity(city.Name));
             }
@@ -157,6 +159,21 @@ namespace Infrastructure
 				city.Calculate();
 				await UpdateCity(city, lockToken);
 			});
+		}
+
+		private static Random rng = new Random();
+
+		public static void Shuffle<T>(List<T> list)
+		{
+			int n = list.Count;
+			while (n > 1)
+			{
+				n--;
+				int k = rng.Next(n + 1);
+				T value = list[k];
+				list[k] = list[n];
+				list[n] = value;
+			}
 		}
 	}
 }
