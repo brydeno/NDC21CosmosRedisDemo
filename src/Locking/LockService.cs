@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using RedLockNet.SERedis;
 
@@ -21,18 +22,19 @@ namespace Locking
 
 		public LockService(
 				RedLockFactory redlockFactory,
-				TimeSpan expiry,
-				TimeSpan wait,
-				TimeSpan retry,
+				IConfiguration configuration,
 				ILogger<LockService> logger,
 				TelemetryClient telemetryClient
 		)
 		{
 			_log = logger;
 			_redlockFactory = redlockFactory;
-			_expiry = expiry;
-			_wait = wait;
-			_retry = retry;
+
+			var redisSection = configuration.GetSection("Redis");
+			_expiry = TimeSpan.FromMilliseconds(ParseOrDefault(redisSection["expiry"], 500));
+			_wait = TimeSpan.FromMilliseconds(ParseOrDefault(redisSection["wait"], 50));
+			_retry = TimeSpan.FromMilliseconds(ParseOrDefault(redisSection["retry"], 10));
+
 			_telemetryClient = telemetryClient;
 		}
 
@@ -131,6 +133,10 @@ namespace Locking
 			return default;
 		}
 
+		private static int ParseOrDefault(string value, int defaultValue)
+		{
+			return string.IsNullOrEmpty(value) ? defaultValue : int.Parse(value);
+		}
 	}
 }
 

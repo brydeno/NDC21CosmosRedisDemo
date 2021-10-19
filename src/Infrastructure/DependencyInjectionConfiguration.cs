@@ -6,6 +6,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using RedLockNet.SERedis;
+using RedLockNet.SERedis.Configuration;
+using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
@@ -19,15 +22,21 @@ namespace Infrastructure
 		public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
 		{
 			services.AddTransient<ILoggerFactory, LoggerFactory>();
-			services.AddLockService(builder =>
+			services.AddSingleton((s) =>
 			{
 				var redisSection = configuration.GetSection("Redis");
-				builder
-					.Connect(connectionString: redisSection["connectString"])
-					.WithConfig(expiry: TimeSpan.FromMilliseconds(ParseOrDefault(redisSection["expiry"], 500)),
-								wait: TimeSpan.FromMilliseconds(ParseOrDefault(redisSection["wait"], 50)),
-								retry: TimeSpan.FromMilliseconds(ParseOrDefault(redisSection["retry"], 10)));
-			});
+				ConfigurationOptions redisConfig = ConfigurationOptions.Parse(redisSection["connectString"]);
+
+				var connection = ConnectionMultiplexer.Connect(redisConfig);
+				var multiplexers = new List<RedLockMultiplexer>
+				{
+					connection
+				};
+
+				return RedLockFactory.Create(multiplexers, s.GetRequiredService<ILoggerFactory>());
+			}
+			);
+			services.AddTransient<ILockService,LockService>();
 
 			var sqlSection = configuration.GetSection("SQL");
 			services.AddDbContextPool<ApocalypseSQLContext>(options =>
@@ -49,11 +58,6 @@ namespace Infrastructure
 			services.AddTransient<ICosmosRequestHandler, ApocalypseCosmosContext>();
 
 			return services;
-		}
-
-		private static int ParseOrDefault(string value, int defaultValue)
-		{
-			return string.IsNullOrEmpty(value) ? defaultValue : int.Parse(value);
-		}
+		}		
 	}
 }
