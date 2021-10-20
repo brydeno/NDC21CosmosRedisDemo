@@ -53,7 +53,10 @@ namespace Infrastructure
 			
 			services.AddSingleton((s) => {
 				var cosmosSection = configuration.GetSection("CosmosDb");
-				return new CosmosClient(cosmosSection["Account"]);
+				return new CosmosClient(cosmosSection["Account"], new CosmosClientOptions
+                {
+					ConnectionMode = ConnectionMode.Direct
+                });
 			});
 			services.AddTransient<ICosmosRequestHandler, ApocalypseCosmosContext>();
 
