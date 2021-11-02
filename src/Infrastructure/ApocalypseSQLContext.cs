@@ -29,7 +29,7 @@ namespace Infrastructure
 		private async Task<City> GetCity(string name)
 		{
 			using var dependency = new Dependency(_telemetryClient, "SQL", "GetCity", $"{name}");
-			return await Cities.FindAsync(name);
+			return await Cities.FirstOrDefaultAsync(x => name.Equals(x.Name));
 		}
 
 		private async Task<IEnumerable<City>> GetCities()
@@ -66,7 +66,7 @@ namespace Infrastructure
 		public async Task SetInformation(string cityName, int kangarooCount, int humanCount, int zombieCount, string state)
 		{
 			using var dependency = new Dependency(_telemetryClient, "SQL", "SetInformation", $"{cityName}");
-			var trans = await Database.BeginTransactionAsync(IsolationLevel.RepeatableRead);
+			using var trans = await Database.BeginTransactionAsync(IsolationLevel.RepeatableRead);
 			try
 			{
 				var city = await GetCity(cityName);
@@ -77,11 +77,12 @@ namespace Infrastructure
 						Name = cityName,
 						State = state
 					};
+					Cities.Add(city);
 				}
 				city.KangarooCount = kangarooCount;
 				city.HumanCount = humanCount;
 				city.ZombieCount = zombieCount;
-				await SaveChangesAsync();
+				SaveChanges();
 				await trans.CommitAsync();
 			}
 			catch
@@ -93,12 +94,10 @@ namespace Infrastructure
 		public async Task Calculate()
 		{
 			using var dependency = new Dependency(_telemetryClient, "SQL", "Calculate", $"All");
-			var tasks = new List<Task>();
 			foreach (var city in await GetCities())
 			{
-				tasks.Add(CalculateCity(city.Name));
+				await CalculateCity(city.Name);
 			}
-			await Task.WhenAll(tasks);
 		}
 
 		public async Task CalculateCity(string cityName)

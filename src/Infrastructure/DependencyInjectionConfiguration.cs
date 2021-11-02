@@ -1,13 +1,14 @@
-﻿using AutoMapper;
-using AzureGems.CosmosDB;
-using AzureGems.Repository.CosmosDB;
-using Domain;
+﻿using Domain;
 using Locking;
 using Microsoft.ApplicationInsights;
+using Microsoft.Azure.Cosmos;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using RedLockNet.SERedis;
+using RedLockNet.SERedis.Configuration;
+using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
@@ -20,49 +21,23 @@ namespace Infrastructure
     {
 		public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
 		{
-			services.AddAutoMapper(Assembly.GetExecutingAssembly());
 			services.AddTransient<ILoggerFactory, LoggerFactory>();
-			services.AddLockService(builder =>
+			services.AddSingleton((s) =>
 			{
 				var redisSection = configuration.GetSection("Redis");
-				builder
-					.Connect(connectionString: redisSection["connectString"])
-					.WithConfig(expiry: TimeSpan.FromMilliseconds(ParseOrDefault(redisSection["expiry"], 1000)),
-								wait: TimeSpan.FromMilliseconds(ParseOrDefault(redisSection["wait"], 100)),
-								retry: TimeSpan.FromMilliseconds(ParseOrDefault(redisSection["retry"], 10)));
-			});
+				ConfigurationOptions redisConfig = ConfigurationOptions.Parse(redisSection["connectString"]);
 
-			services.AddCosmosDb(builder =>
-			{
-				var cosmosSection = configuration.GetSection("CosmosDb");
-				string authKey = "";
-				string serviceEndPoint = "";
-
-				// Use this generic builder to parse the connection string
-				DbConnectionStringBuilder strBuilder = new DbConnectionStringBuilder
+				var connection = ConnectionMultiplexer.Connect(redisConfig);
+				var multiplexers = new List<RedLockMultiplexer>
 				{
-					ConnectionString = cosmosSection["Account"]
+					connection
 				};
 
-				if (strBuilder.TryGetValue("AccountKey", out object key))
-				{
-					authKey = key.ToString();
-				}
+				return RedLockFactory.Create(multiplexers, s.GetRequiredService<ILoggerFactory>());
+			}
+			);
+			services.AddTransient<ILockService,LockService>();
 
-				if (strBuilder.TryGetValue("AccountEndpoint", out object uri))
-				{
-					serviceEndPoint = uri.ToString();
-				}
-
-				builder
-					.Connect(endPoint: serviceEndPoint, authKey)
-					.UseDatabase(databaseId: "ZombieApocalypse")
-					.WithSharedThroughput(400)
-					.WithContainerConfig(c =>
-					{
-						c.AddContainer<CosmosCity>(containerId: "Cities", partitionKeyPath: "/State");
-					});
-			});
 			var sqlSection = configuration.GetSection("SQL");
 			services.AddDbContextPool<ApocalypseSQLContext>(options =>
 			{
@@ -72,23 +47,20 @@ namespace Infrastructure
 
 			});
 
-			services.AddCosmosContext<ApocalypseCosmosContext>();
-			services.AddTransient<ICosmosRequestHandler, ApocalypseCosmosContext>(sp =>
-					sp.GetRequiredService<ApocalypseCosmosContext>()
-							.AddMapper(sp.GetRequiredService<IMapper>())
-							.AddTelemetry(sp.GetRequiredService<TelemetryClient>())
-							.AddLockService(sp.GetRequiredService<ILockService>()));
-
 			services.AddTransient<ISQLRequestHandler, ApocalypseSQLContext>(sp =>
 					sp.GetRequiredService<ApocalypseSQLContext>()
 							.AddTelemetry(sp.GetRequiredService<TelemetryClient>()));
+			
+			services.AddSingleton((s) => {
+				var cosmosSection = configuration.GetSection("CosmosDb");
+				return new CosmosClient(cosmosSection["Account"], new CosmosClientOptions
+                {
+					ConnectionMode = ConnectionMode.Direct
+                });
+			});
+			services.AddTransient<ICosmosRequestHandler, ApocalypseCosmosContext>();
 
 			return services;
-		}
-
-		private static int ParseOrDefault(string value, int defaultValue)
-		{
-			return string.IsNullOrEmpty(value) ? defaultValue : int.Parse(value);
-		}
+		}		
 	}
 }

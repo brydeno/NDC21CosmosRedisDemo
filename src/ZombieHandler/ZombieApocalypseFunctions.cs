@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using Infrastructure;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace ZombieHandler
 {
@@ -22,8 +23,6 @@ namespace ZombieHandler
             _cosmos = cosmos;
         }
 
-        //    public Task UpdateCurrentInformation(string cityName, int kangarooChange, int humanChange, int zombieChange);
-        //            public Task SetInformation(string cityName, int kangarooCount, int humanCount, int zombieCount);
 
         public IApocalypseRequestHandler GetRequestHandler(HttpRequest req)
         {
@@ -52,6 +51,23 @@ namespace ZombieHandler
             return new OkResult();
         }
 
+        [FunctionName("CalculateSQL")]
+        public async Task<IActionResult> CalculateSQL(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequest req,
+            ILogger log)
+        {
+            await _sql.Calculate();
+            return new OkResult();
+        }
+
+        [FunctionName("CalculateCosmos")]
+        public async Task<IActionResult> CalculateCosmos(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequest req,
+            ILogger log)
+        {
+            await _cosmos.Calculate();
+            return new OkResult();
+        }
         [FunctionName("UpdateCurrentInformation")]
         public async Task<IActionResult> UpdateCurrentInformation(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequest req,
@@ -67,8 +83,16 @@ namespace ZombieHandler
             [HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequest req,
             ILogger log)
         {
-            CityDTO city = await JsonSerializer.DeserializeAsync<CityDTO>(req.Body);
-            await GetRequestHandler(req).SetInformation(city.CityName,city.KangarooCount,city.HumanCount,city.ZombieCount,city.State);
+            var random = new Random();
+            IEnumerable<CitiesDTO> cities = await JsonSerializer.DeserializeAsync<IEnumerable<CitiesDTO>>(req.Body);
+            foreach (var city in cities)
+            {
+                int population = int.Parse(city.Population);
+                int kp = (int)Math.Round(population * (0.8 + (random.NextDouble() * 0.4)));
+                int zp = (int)Math.Round(population * (0.8 + (random.NextDouble() * 0.4)));
+                await _cosmos.SetInformation(city.City, kp, population, zp, city.State);
+                await _sql.SetInformation(city.City, kp, population, zp, city.State);
+            }
             return new OkResult();
         }
     }
